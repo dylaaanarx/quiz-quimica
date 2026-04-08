@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quiz de Tabla Periódica - CTP Acosta</title>
+    <style>
+        body {
+            font-family: sans-serif;
+            background-color: #f0f2f5;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+        }
+        .quiz-container {
+            background-color: white;
+            padding: 2rem;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            width: 100%;
+            max-width: 500px;
+            text-align: center;
+        }
+        h1 { color: #1a73e8; font-size: 1.5rem; }
+        .question { font-size: 1.2rem; margin-bottom: 1.5rem; font-weight: bold; }
+        .options { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+        button {
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            background-color: #fff;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        button:hover { background-color: #e8f0fe; border-color: #1a73e8; }
+        .feedback { margin-top: 1rem; font-weight: bold; }
+        .score { margin-top: 1rem; color: #555; }
+        .hidden { display: none; }
+        .correct { background-color: #d4edda !important; border-color: #28a745 !important; }
+        .incorrect { background-color: #f8d7da !important; border-color: #dc3545 !important; }
+    </style>
+</head>
+<body>
+
+<div class="quiz-container">
+    <h1>Repaso de Química</h1>
+    <div id="quiz-ui">
+        <div class="question" id="question-text">Cargando...</div>
+        <div class="options" id="options-container"></div>
+        <div class="feedback" id="feedback"></div>
+        <div class="score">Aciertos: <span id="score-val">0</span> / <span id="total-val">0</span></div>
+    </div>
+    <div id="final-screen" class="hidden">
+        <h2>¡Examen terminado!</h2>
+        <p id="final-msg"></p>
+        <button onclick="restartQuiz()">Reiniciar Quiz</button>
+    </div>
+</div>
+
+<script>
+    const elementos = [
+        {n: "Actinio", s: "Ac"}, {n: "Aluminio", s: "Al"}, {n: "Antimonio", s: "Sb"},
+        {n: "Argón", s: "Ar"}, {n: "Arsénico", s: "As"}, {n: "Astato", s: "At"},
+        {n: "Azufre", s: "S"}, {n: "Bario", s: "Ba"}, {n: "Berilio", s: "Be"},
+        {n: "Bismuto", s: "Bi"}, {n: "Boro", s: "B"}, {n: "Bromo", s: "Br"},
+        {n: "Cadmio", s: "Cd"}, {n: "Calcio", s: "Ca"}, {n: "Carbono", s: "C"},
+        {n: "Cesio", s: "Cs"}, {n: "Cloro", s: "Cl"}, {n: "Cobalto", s: "Co"},
+        {n: "Cobre", s: "Cu"}, {n: "Cromo", s: "Cr"}, {n: "Escandio", s: "Sc"},
+        {n: "Estaño", s: "Sn"}, {n: "Estroncio", s: "Sr"}, {n: "Flúor", s: "F"},
+        {n: "Fósforo", s: "P"}, {n: "Francio", s: "Fr"}, {n: "Galio", s: "Ga"},
+        {n: "Germanio", s: "Ge"}, {n: "Helio", s: "He"}, {n: "Hidrógeno", s: "H"},
+        {n: "Hierro", s: "Fe"}, {n: "Indio", s: "In"}, {n: "Kriptón", s: "Kr"},
+        {n: "Lantano", s: "La"}, {n: "Litio", s: "Li"}, {n: "Magnesio", s: "Mg"},
+        {n: "Manganeso", s: "Mn"}, {n: "Mercurio", s: "Hg"}, {n: "Molibdeno", s: "Mo"},
+        {n: "Neón", s: "Ne"}, {n: "Níquel", s: "Ni"}, {n: "Nitrógeno", s: "N"},
+        {n: "Oro", s: "Au"}, {n: "Oxígeno", s: "O"}, {n: "Paladio", s: "Pd"},
+        {n: "Plata", s: "Ag"}, {n: "Platino", s: "Pt"}, {n: "Plomo", s: "Pb"},
+        {n: "Plutonio", s: "Pu"}, {n: "Polonio", s: "Po"}, {n: "Potasio", s: "K"},
+        {n: "Radio", s: "Ra"}, {n: "Radón", s: "Rn"}, {n: "Rubidio", s: "Rb"},
+        {n: "Selenio", s: "Se"}, {n: "Silicio", s: "Si"}, {n: "Sodio", s: "Na"},
+        {n: "Talio", s: "Tl"}, {n: "Tecnecio", s: "Tc"}, {n: "Titanio", s: "Ti"},
+        {n: "Uranio", s: "U"}, {n: "Vanadio", s: "V"}, {n: "Xenón", s: "Xe"},
+        {n: "Yodo", s: "I"}, {n: "Zinc", s: "Zn"}
+    ];
+
+    let score = 0;
+    let currentIdx = 0;
+    let quizData = [];
+
+    function initQuiz() {
+        // Mezclamos y seleccionamos si preguntamos por nombre o símbolo
+        quizData = [...elementos].sort(() => Math.random() - 0.5).map(el => {
+            const type = Math.random() > 0.5 ? 's_to_n' : 'n_to_s';
+            return { ...el, type };
+        });
+        score = 0;
+        currentIdx = 0;
+        document.getElementById('quiz-ui').classList.remove('hidden');
+        document.getElementById('final-screen').classList.add('hidden');
+        showQuestion();
+    }
+
+    function showQuestion() {
+        if (currentIdx >= quizData.length) {
+            showFinal();
+            return;
+        }
+
+        const item = quizData[currentIdx];
+        const feedback = document.getElementById('feedback');
+        feedback.textContent = "";
+        
+        const qText = item.type === 's_to_n' ? `¿Qué elemento es "${item.s}"?` : `¿Cuál es el símbolo de "${item.n}"?`;
+        document.getElementById('question-text').textContent = qText;
+
+        // Generar opciones falsas
+        let options = [];
+        const correctAns = item.type === 's_to_n' ? item.n : item.s;
+        options.push(correctAns);
+
+        while (options.length < 4) {
+            const randomEl = elementos[Math.floor(Math.random() * elementos.length)];
+            const val = item.type === 's_to_n' ? randomEl.n : randomEl.s;
+            if (!options.includes(val)) options.push(val);
+        }
+
+        options.sort(() => Math.random() - 0.5);
+
+        const container = document.getElementById('options-container');
+        container.innerHTML = "";
+        options.forEach(opt => {
+            const btn = document.createElement('button');
+            btn.textContent = opt;
+            btn.onclick = () => checkAnswer(opt, correctAns, btn);
+            container.appendChild(btn);
+        });
+
+        document.getElementById('score-val').textContent = score;
+        document.getElementById('total-val').textContent = currentIdx;
+    }
+
+    function checkAnswer(selected, correct, btn) {
+        const buttons = document.querySelectorAll('#options-container button');
+        buttons.forEach(b => b.disabled = true);
+
+        if (selected === correct) {
+            score++;
+            btn.classList.add('correct');
+            document.getElementById('feedback').textContent = "¡Correcto!";
+        } else {
+            btn.classList.add('incorrect');
+            document.getElementById('feedback').textContent = `Incorrecto. Era ${correct}`;
+        }
+
+        setTimeout(() => {
+            currentIdx++;
+            showQuestion();
+        }, 1500);
+    }
+
+    function showFinal() {
+        document.getElementById('quiz-ui').classList.add('hidden');
+        document.getElementById('final-screen').classList.remove('hidden');
+        document.getElementById('final-msg').textContent = `Lograste ${score} de ${quizData.length} puntos.`;
+    }
+
+    function restartQuiz() {
+        initQuiz();
+    }
+
+    initQuiz();
+</script>
+
+</body>
+</html>
