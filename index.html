@@ -3,61 +3,77 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Quiz de Tabla Periódica - CTP Acosta</title>
+    <title>Quiz de Tabla Periódica - Dylan Arias</title>
     <style>
         body {
-            font-family: sans-serif;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             background-color: #f0f2f5;
             display: flex;
             justify-content: center;
             align-items: center;
             min-height: 100vh;
             margin: 0;
+            flex-direction: column;
         }
         .quiz-container {
             background-color: white;
             padding: 2rem;
-            border-radius: 10px;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-            width: 100%;
+            border-radius: 12px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+            width: 90%;
             max-width: 500px;
             text-align: center;
         }
-        h1 { color: #1a73e8; font-size: 1.5rem; }
-        .question { font-size: 1.2rem; margin-bottom: 1.5rem; font-weight: bold; }
-        .options { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+        h1 { color: #1a73e8; font-size: 1.6rem; margin-bottom: 0.5rem; }
+        .subtitle { color: #5f6368; margin-bottom: 1.5rem; font-size: 0.9rem; }
+        .question { font-size: 1.3rem; margin-bottom: 1.5rem; font-weight: bold; color: #202124; }
+        .options { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
         button {
-            padding: 12px;
-            border: 1px solid #ddd;
-            border-radius: 5px;
+            padding: 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
             background-color: #fff;
+            font-size: 1rem;
             cursor: pointer;
             transition: all 0.2s;
         }
-        button:hover { background-color: #e8f0fe; border-color: #1a73e8; }
-        .feedback { margin-top: 1rem; font-weight: bold; }
-        .score { margin-top: 1rem; color: #555; }
+        button:hover:not(:disabled) { background-color: #f8f9fa; border-color: #1a73e8; color: #1a73e8; }
+        .feedback { margin-top: 1.5rem; font-weight: bold; min-height: 1.5em; }
+        .score { margin-top: 1rem; color: #70757a; font-size: 0.9rem; }
         .hidden { display: none; }
-        .correct { background-color: #d4edda !important; border-color: #28a745 !important; }
-        .incorrect { background-color: #f8d7da !important; border-color: #dc3545 !important; }
+        .correct { background-color: #e6ffed !important; border-color: #28a745 !important; color: #28a745; }
+        .incorrect { background-color: #fff1f0 !important; border-color: #d93025 !important; color: #d93025; }
+        
+        /* Créditos al final */
+        footer {
+            margin-top: 20px;
+            font-size: 0.85rem;
+            color: #5f6368;
+        }
+        footer b { color: #1a73e8; }
     </style>
 </head>
 <body>
 
 <div class="quiz-container">
     <h1>Repaso de Química</h1>
+    <div class="subtitle">Preparación para el examen</div>
+    
     <div id="quiz-ui">
-        <div class="question" id="question-text">Cargando...</div>
+        <div class="question" id="question-text">Preparando preguntas...</div>
         <div class="options" id="options-container"></div>
         <div class="feedback" id="feedback"></div>
-        <div class="score">Aciertos: <span id="score-val">0</span> / <span id="total-val">0</span></div>
+        <div class="score">Progreso: <span id="score-val">0</span> aciertos de <span id="total-val">0</span> preguntas</div>
     </div>
+
     <div id="final-screen" class="hidden">
-        <h2>¡Examen terminado!</h2>
-        <p id="final-msg"></p>
-        <button onclick="restartQuiz()">Reiniciar Quiz</button>
+        <h2>¡Repaso Completado!</h2>
+        <p id="final-msg" style="font-size: 1.2rem;"></p>
+        <button onclick="restartQuiz()" style="width: 100%; margin-top: 10px; background: #1a73e8; color: white; border: none;">Intentar de nuevo</button>
     </div>
 </div>
+
+<footer>Hecho por <b>Dylan Arias</b></footer>
 
 <script>
     const elementos = [
@@ -90,10 +106,8 @@
     let quizData = [];
 
     function initQuiz() {
-        // Mezclamos y seleccionamos si preguntamos por nombre o símbolo
         quizData = [...elementos].sort(() => Math.random() - 0.5).map(el => {
-            const type = Math.random() > 0.5 ? 's_to_n' : 'n_to_s';
-            return { ...el, type };
+            return { ...el, type: Math.random() > 0.5 ? 's_to_n' : 'n_to_s' };
         });
         score = 0;
         currentIdx = 0;
@@ -109,13 +123,11 @@
         }
 
         const item = quizData[currentIdx];
-        const feedback = document.getElementById('feedback');
-        feedback.textContent = "";
+        document.getElementById('feedback').textContent = "";
         
         const qText = item.type === 's_to_n' ? `¿Qué elemento es "${item.s}"?` : `¿Cuál es el símbolo de "${item.n}"?`;
         document.getElementById('question-text').textContent = qText;
 
-        // Generar opciones falsas
         let options = [];
         const correctAns = item.type === 's_to_n' ? item.n : item.s;
         options.push(correctAns);
@@ -148,22 +160,24 @@
         if (selected === correct) {
             score++;
             btn.classList.add('correct');
-            document.getElementById('feedback').textContent = "¡Correcto!";
+            document.getElementById('feedback').style.color = "#28a745";
+            document.getElementById('feedback').textContent = "¡Muy bien!";
         } else {
             btn.classList.add('incorrect');
-            document.getElementById('feedback').textContent = `Incorrecto. Era ${correct}`;
+            document.getElementById('feedback').style.color = "#d93025";
+            document.getElementById('feedback').textContent = `Falso. La respuesta era: ${correct}`;
         }
 
         setTimeout(() => {
             currentIdx++;
             showQuestion();
-        }, 1500);
+        }, 1200);
     }
 
     function showFinal() {
         document.getElementById('quiz-ui').classList.add('hidden');
         document.getElementById('final-screen').classList.remove('hidden');
-        document.getElementById('final-msg').textContent = `Lograste ${score} de ${quizData.length} puntos.`;
+        document.getElementById('final-msg').innerHTML = `Puntaje final: <b>${score}</b> de <b>${quizData.length}</b><br><br>¡Sigue practicando, Dylan!`;
     }
 
     function restartQuiz() {
